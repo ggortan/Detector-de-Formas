@@ -4,6 +4,11 @@ Este projeto é uma aplicação web para detecção de formas geométricas em im
 
 A aplicação foi desenvolvida como prática final da disciplina de Multimídia do curso de Ciência da Computação da Escola de Engenharia de Piracicaba (EEP) por Gabriel Gortan - RA 202410045.
 
+## Experimente Online
+
+Você pode testar o projeto diretamente no navegador acessando:  
+[https://ggortan.github.io/Detector-de-Formas/](https://ggortan.github.io/Detector-de-Formas/)
+
 ## Funcionalidades
 
 - Upload de imagens para detectar formas geométricas (círculos, quadrados, triângulos, etc.).
