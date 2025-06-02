@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Detector de Formas Camera Live</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden; background: black;
+    font-family: Arial, sans-serif;
+    color: white;
+  }
+  #container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: black;
+  }
+  video, canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+  }
+  #saidaCanvas {
+    z-index: 10;
+  }
+  #rotulos {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 20;
+    font-size: 1.5em;
+    background: rgba(0,0,0,0.5);
+    padding: 8px 12px;
+    border-radius: 8px;
+    max-width: 90vw;
+  }
+  #botaoAlternarCamera {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: rgba(0, 123, 255, 0.8);
+    border: none;
+    padding: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+  }
+  #botaoAlternarCamera:hover {
+    background: rgba(0, 123, 255, 1);
+  }
+  #botaoIrParaUpload {
+    position: fixed;
+    bottom: 80px; /* acima do botaoAlternarCamera */
+    right: 20px;
+    z-index: 9999;
+    background: rgba(255, 165, 0, 0.8);
+    border: none;
+    padding: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+    color: black;
+    font-weight: bold;
+    font-size: 1.2em;
+  }
+  #botaoIrParaUpload:hover {
+    background: rgba(255, 165, 0, 1);
+  }
+  #rodape {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 32px; /* rodapé mais fino */
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    font-size: 0.9em;
+    user-select: none;
+    z-index: 12;
+    gap: 12px;
+  }
+  #iconesRodape {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+  }
+</style>
+</head>
+<body>
+
+<div id="container">
+  <video id="elementoVideo" autoplay playsinline muted></video>
+  <canvas id="saidaCanvas"></canvas>
+  <div id="rotulos">Aguardando detecção...</div>
+  <button id="botaoAlternarCamera" aria-label="Alternar Câmera" title="Alternar Câmera">
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="white" viewBox="0 0 24 24">
+    <path d="M20 5h-3.586l-1.707-1.707A.996.996 0 0014 3H10a.996.996 0 00-.707.293L7.586 5H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V7c0-1.103-.897-2-2-2zm0 12H4V7h4.586l1.707-1.707h2.414L15.414 7H20v10zM12 8a4 4 0 100 8 4 4 0 000-8zm0 6a2 2 0 110-4 2 2 0 010 4z"/>
+    </svg>
+  </button>
+  <button id="botaoIrParaUpload" aria-label="Ir para Upload" title="Ir para Upload">⇪</button>
+</div>
+<footer id="rodape">
+  <div id="iconesRodape">
+    <a href="https://github.com/ggortan" target="_blank" aria-label="GitHub" title="GitHub" rel="noopener noreferrer">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="white" width="20" height="20" viewBox="0 0 24 24">
+        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.757-1.333-1.757-1.09-.745.083-.729.083-.729 1.205.084 1.84 1.236 1.84 1.236 1.07 1.835 2.807 1.305 3.492.998.108-.776.418-1.305.76-1.605-2.665-.3-5.466-1.335-5.466-5.93 0-1.31.47-2.38 1.236-3.22-.124-.303-.536-1.523.117-3.176 0 0 1.008-.322 3.3 1.23a11.5 11.5 0 013.003-.404c1.02.005 2.045.138 3.003.404 2.29-1.552 3.297-1.23 3.297-1.23.655 1.653.243 2.873.12 3.176.77.84 1.235 1.91 1.235 3.22 0 4.61-2.807 5.625-5.48 5.92.43.37.823 1.102.823 2.222 0 1.606-.015 2.896-.015 3.286 0 .32.216.694.825.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+      </svg>
+    </a>
+    <a href="https://linkedin.com/in/gabrielgortan" target="_blank" aria-label="LinkedIn" title="LinkedIn" rel="noopener noreferrer" style="margin-left: 12px;">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="white" width="20" height="20" viewBox="0 0 24 24">
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.354V9h3.414v1.561h.049c.476-.9 1.637-1.852 3.37-1.852 3.602 0 4.268 2.37 4.268 5.455v6.288zM5.337 7.433a2.07 2.07 0 11.001-4.139 2.07 2.07 0 01-.001 4.139zm1.777 13.019H3.56V9h3.554v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.226.792 24 1.771 24h20.451C23.2 24 24 23.226 24 22.271V1.729C24 .774 23.2 0 22.225 0z"/>
+      </svg>
+    </a>
+  </div>
+  <div id="textoRodape">Criado por Gabriel Gortan</div>
+</footer>
+<script src="https://docs.opencv.org/4.5.0/opencv.js" type="text/javascript"></script>
+<script>
+let elementoVideo = document.getElementById('elementoVideo');
+let saidaCanvas = document.getElementById('saidaCanvas');
+let contexto = saidaCanvas.getContext('2d');
+let rotulosDiv = document.getElementById('rotulos');
+let botaoAlternarCamera = document.getElementById('botaoAlternarCamera');
+let botaoIrParaUpload = document.getElementById('botaoIrParaUpload');
+
+let fluxoVideo = null;
+let estaProcessando = false;
+let formasDetectadas = [];
+let formasDetectadasUltimaVez = [];
+let usarCameraFrontal = false; // false = traseira, true = frontal
+
+const contextoAudio = new (window.AudioContext || window.webkitAudioContext)();
+
+function tocarSom(frequencia) {
+  const oscilador = contextoAudio.createOscillator();
+  const ganho = contextoAudio.createGain();
+  oscilador.connect(ganho);
+  ganho.connect(contextoAudio.destination);
+  oscilador.type = 'sine';
+  oscilador.frequency.setValueAtTime(frequencia, contextoAudio.currentTime);
+  ganho.gain.setValueAtTime(0.15, contextoAudio.currentTime);
+  oscilador.start();
+  oscilador.stop(contextoAudio.currentTime + 0.3);
+}
+
+const sonsFormas = {
+  'triangulo': 660,    // Mi agudo
+  'quadrilatero': 440, // Lá médio
+  'circulo': 330       // Mi grave
+};
+
+async function iniciarCamera() {
+  if (fluxoVideo) {
+    fluxoVideo.getTracks().forEach(trilha => trilha.stop());
+  }
+  try {
+    const restricoes = { video: { facingMode: usarCameraFrontal ? 'user' : 'environment' }, audio: false };
+    fluxoVideo = await navigator.mediaDevices.getUserMedia(restricoes);
+    elementoVideo.srcObject = fluxoVideo;
+    await elementoVideo.play();
+    ajustarTamanhoCanvas();
+  } catch (erro) {
+    rotulosDiv.textContent = 'Erro ao acessar câmera: ' + erro.message;
+  }
+}
+
+function ajustarTamanhoCanvas() {
+  saidaCanvas.width = elementoVideo.videoWidth;
+  saidaCanvas.height = elementoVideo.videoHeight;
+  saidaCanvas.style.width = '100vw';
+  saidaCanvas.style.height = '100vh';
+}
+
+function desenharContornos(destino, contornos, hierarquia) {
+  let contadoresFormas = {
+    triangulo: 0,
+    quadrilatero: 0,
+    circulo: 0
+  };
+
+  for (let i = 0; i < contornos.size(); i++) {
+    let contorno = contornos.get(i);
+    let area = cv.contourArea(contorno);
+    if (area < 1000) {
+      contorno.delete();
+      continue;
+    }
+
+    let perimetro = cv.arcLength(contorno, true);
+    let aproximacao = new cv.Mat();
+    cv.approxPolyDP(contorno, aproximacao, 0.02 * perimetro, true);
+    let vertices = aproximacao.rows;
+
+    let cor = null;
+    let tipoForma = null;
+
+    if (vertices === 3) {
+      cor = new cv.Scalar(0, 0, 255, 255); // vermelho
+      tipoForma = 'triangulo';
+    } else if (vertices === 4) {
+      cor = new cv.Scalar(0, 255, 0, 255); // verde
+      tipoForma = 'quadrilatero';
+    } else if (vertices >= 8) {
+      let circularidade = 4 * Math.PI * area / (perimetro * perimetro);
+      if (circularidade > 0.7) {
+        cor = new cv.Scalar(255, 0, 255, 255); // magenta
+        tipoForma = 'circulo';
+      }
+    }
+
+    if (tipoForma) {
+      cv.drawContours(destino, contornos, i, cor, 3);
+      formasDetectadas.push(tipoForma);
+
+      // Atualizar contador
+      contadoresFormas[tipoForma] += 1;
+      let rotulo = contadoresFormas[tipoForma].toString();
+
+      // Calcular centro aproximado do contorno
+      let momentos = cv.moments(contorno);
+      let cx = Math.round(momentos.m10 / momentos.m00);
+      let cy = Math.round(momentos.m01 / momentos.m00);
+
+      // Desenhar número
+      cv.putText(
+        destino,
+        rotulo,
+        new cv.Point(cx, cy),
+        cv.FONT_HERSHEY_SIMPLEX,
+        1,
+        cor,
+        2
+      );
+    }
+
+    aproximacao.delete();
+    contorno.delete();
+  }
+}
+
+function atualizarRotulos() {
+  if (formasDetectadas.length === 0) {
+    rotulosDiv.textContent = 'Nenhuma forma detectada';
+  } else {
+    let contagem = formasDetectadas.reduce((acumulador, forma) => {
+      acumulador[forma] = (acumulador[forma] || 0) + 1;
+      return acumulador;
+    }, {});
+
+    let textoRotulo = 'Formas detectadas: ';
+    const traducoes = {
+      triangulo: 'Triângulo',
+      quadrilatero: 'Quadrilátero',
+      circulo: 'Círculo'
+    };
+
+    textoRotulo += Object.entries(contagem).map(([forma, qtd]) => {
+      return `${traducoes[forma]} (${qtd})`;
+    }).join(', ');
+
+    rotulosDiv.textContent = textoRotulo;
+
+    // Tocar sons (somente 1x por tipo por detecção)
+    Object.keys(contagem).forEach(forma => {
+      let freq = sonsFormas[forma];
+      if (freq) tocarSom(freq);
+    });
+  }
+
+  formasDetectadasUltimaVez = [...formasDetectadas];
+}
+
+function processarQuadro() {
+  if (estaProcessando || !cv || !elementoVideo.videoWidth) return;
+  estaProcessando = true;
+  formasDetectadas = [];
+
+  let src = new cv.Mat(elementoVideo.videoHeight, elementoVideo.videoWidth, cv.CV_8UC4);
+  let dst = new cv.Mat();
+  let cinza = new cv.Mat();
+  let borrado = new cv.Mat();
+  let bordas = new cv.Mat();
+  let contornos = new cv.MatVector();
+  let hierarquia = new cv.Mat();
+
+  try {
+    contexto.drawImage(elementoVideo, 0, 0, saidaCanvas.width, saidaCanvas.height);
+    let dadosImagem = contexto.getImageData(0, 0, saidaCanvas.width, saidaCanvas.height);
+    src.data.set(dadosImagem.data);
+
+    cv.cvtColor(src, cinza, cv.COLOR_RGBA2GRAY, 0);
+    cv.GaussianBlur(cinza, borrado, new cv.Size(5, 5), 0);
+    cv.Canny(borrado, bordas, 50, 150);
+    cv.findContours(bordas, contornos, hierarquia, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+    dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC4);
+    desenharContornos(dst, contornos, hierarquia);
+
+    cv.imshow('saidaCanvas', dst);
+
+    atualizarRotulos();
+
+  } catch (erro) {
+    console.error(erro);
+    rotulosDiv.textContent = 'Erro na detecção';
+  } finally {
+    src.delete(); dst.delete(); cinza.delete(); borrado.delete(); bordas.delete();
+    contornos.delete(); hierarquia.delete();
+    estaProcessando = false;
+  }
+}
+
+function iniciarLoopDeteccao() {
+  processarQuadro();
+  setInterval(processarQuadro, 1000);
+}
+
+botaoAlternarCamera.addEventListener('click', () => {
+  usarCameraFrontal = !usarCameraFrontal;
+  iniciarCamera();
+});
+
+botaoIrParaUpload.addEventListener('click', () => {
+  window.location.href = 'upload.html';
+});
+
+// Esperar OpenCV carregar
+cv['onRuntimeInitialized'] = () => {
+  rotulosDiv.textContent = 'OpenCV.js carregado! Iniciando câmera...';
+  iniciarCamera().then(() => {
+    iniciarLoopDeteccao();
+  });
+};
+
+// Ativar áudio após interação do usuário (requisito mobile)
+document.body.addEventListener('click', () => {
+  if (contextoAudio.state === 'suspended') {
+    contextoAudio.resume();
+  }
+}, { once: true });
+
+// Ajustar canvas ao redimensionar vídeo
+elementoVideo.addEventListener('loadedmetadata', () => {
+  saidaCanvas.width = elementoVideo.videoWidth;
+  saidaCanvas.height = elementoVideo.videoHeight;
+  saidaCanvas.style.width = '100vw';
+  saidaCanvas.style.height = '100vh';
+});
+</script>
+
+</body>
+</html>
