@@ -11,7 +11,7 @@
     color: white;
   }
   body {
-    padding-bottom: 40px; /* ajuste conforme altura do rodapé + margem */
+    padding-bottom: 40px;
   }
   #container {
     position: relative;
@@ -246,7 +246,7 @@ function processarImagem() {
   saidaCanvas.width = imagem.width;
   saidaCanvas.height = imagem.height;
 
-  // Leia a imagem diretamente do elemento img
+  // Le a imagem diretamente do elemento img
   let src = cv.imread(imagem);
   let cinza = new cv.Mat();
   let borrado = new cv.Mat();
