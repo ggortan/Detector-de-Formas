@@ -64,7 +64,7 @@
   }
   #botaoIrParaUpload {
     position: fixed;
-    bottom: 80px; /* acima do botaoAlternarCamera */
+    bottom: 80px;
     right: 20px;
     z-index: 9999;
     background: rgba(255, 165, 0, 0.8);
@@ -93,7 +93,7 @@
     position: fixed;
     bottom: 0;
     width: 100%;
-    height: 32px; /* rodapé mais fino */
+    height: 32px;
     background: rgba(0, 0, 0, 0.8);
     color: white;
     display: flex;
@@ -360,7 +360,7 @@ cv['onRuntimeInitialized'] = () => {
   });
 };
 
-// Ativar áudio após interação do usuário (requisito mobile)
+// Ativar áudio após interação do usuário
 document.body.addEventListener('click', () => {
   if (contextoAudio.state === 'suspended') {
     contextoAudio.resume();
